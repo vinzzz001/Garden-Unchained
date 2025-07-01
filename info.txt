@@ -1,0 +1,9 @@
+Name: Garden Unchained
+ID: GardenUnchained
+Author: vinzzz001
+Description: Expands the garden minigame beyond its limits.
+GameVersion: 2.052
+ModVersion: 1.0
+Dependencies:
+Disabled: false
+RemoteFile: https://raw.githubusercontent.com/vinzzz001/Garden-Unchained/main/mainScript.js

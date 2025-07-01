@@ -756,6 +756,8 @@ Game.registerMod("GardenUnchained", {
     M.toRebuild = true;
     M.buildPlot();
     M.computeBoostPlot();
+
+    console.log("Garden Unchained loaded!");
   },
 
   reStyleDivs: function () {
@@ -800,4 +802,3 @@ Game.registerMod("GardenUnchained", {
     field.style.flex = "1";
   },
 });
-return "done";
