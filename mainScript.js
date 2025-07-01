@@ -1,4 +1,4 @@
-Game.registerMod("GardenUnchained", {
+// Game.registerMod("GardenUnchained", {
   init: function () {
     var M = Game.Objects["Farm"].minigame;
 
@@ -798,5 +798,5 @@ Game.registerMod("GardenUnchained", {
     //field
     field.style.minWidth = 6 * M.tileSize + "px";
     field.style.flex = "1";
-  },
-});
+  }
+// });
