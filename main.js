@@ -274,11 +274,11 @@ Game.registerMod("GardenUnchained", {
   //     for (var y = 0; y < M.plotSize.height; y++) {
   //       for (var x = 0; x < M.plotSize.width; x++) {
   //         str += `
-  //           <div 
-  //             id="gardenTile-${x}-${y}" 
-  //             class="gardenTile" 
-  //             style="left:${x * M.tileSize}px; 
-  //             top:${y * M.tileSize}px; 
+  //           <div
+  //             id="gardenTile-${x}-${y}"
+  //             class="gardenTile"
+  //             style="left:${x * M.tileSize}px;
+  //             top:${y * M.tileSize}px;
   //             display:none;"
   //             ${Game.getDynamicTooltip(
   //               `Game.ObjectsById[${M.parent.id}].minigame.tileTooltip(${x},${y})`,
@@ -760,49 +760,48 @@ Game.registerMod("GardenUnchained", {
   //   console.log("Garden Unchained loaded!");
   // },
   init: function () {
-    console.log("Garden Unchained loaded!");
-
-  }
-
-  reStyleDivs: function () {
-    const plot = l("gardenPlot");
-    plot.style.width = null;
-    plot.style.height = null;
-
-    //Makes the soils not scroll with the window.
-    const field = l("gardenField");
-    field.style.overflow = "auto";
-
-    const fieldRect = field.getBoundingClientRect();
-
-    //Places the soils in the bottom
-    const soils = l("gardenSoils");
-    soils.style.marginTop = "240px";
-    soils.style.position = "fixed";
-    soils.style.left = fieldRect.left + fieldRect.width / 2 + "px";
-    soils.style.transform = "translateX(-50%)";
-
-    //Places sugar info at the bottom
-    const sugarInfo = l("gardenInfo");
-    sugarInfo.style.marginTop = "288px";
-    sugarInfo.style.position = "fixed";
-    sugarInfo.style.left = fieldRect.left + fieldRect.width / 2 + "px";
-    sugarInfo.style.transform = "translateX(-50%)";
-
-    //Set and forget Once
-    const layout = l("gardenContent");
-    layout.style.display = "flex";
-    layout.style.gap = "8px";
-
-    //The sidepanel.
-    //todo: Should have a min width, and maybe move to be above the plot when the window gets too small. Pop-out maybe?
-    //todo:connection with github to ensure ease of refresh etc.
-    const panel = l("gardenPanel");
-    panel.style.minWidth = "320px";
-    panel.style.flex = "0 1 40%";
-
-    //field
-    field.style.minWidth = 6 * M.tileSize + "px";
-    field.style.flex = "1";
+    Game.Notify("Garden Unchained loaded!?", "", "", 1);
   },
+
+  // reStyleDivs: function () {
+  //   const plot = l("gardenPlot");
+  //   plot.style.width = null;
+  //   plot.style.height = null;
+
+  //   //Makes the soils not scroll with the window.
+  //   const field = l("gardenField");
+  //   field.style.overflow = "auto";
+
+  //   const fieldRect = field.getBoundingClientRect();
+
+  //   //Places the soils in the bottom
+  //   const soils = l("gardenSoils");
+  //   soils.style.marginTop = "240px";
+  //   soils.style.position = "fixed";
+  //   soils.style.left = fieldRect.left + fieldRect.width / 2 + "px";
+  //   soils.style.transform = "translateX(-50%)";
+
+  //   //Places sugar info at the bottom
+  //   const sugarInfo = l("gardenInfo");
+  //   sugarInfo.style.marginTop = "288px";
+  //   sugarInfo.style.position = "fixed";
+  //   sugarInfo.style.left = fieldRect.left + fieldRect.width / 2 + "px";
+  //   sugarInfo.style.transform = "translateX(-50%)";
+
+  //   //Set and forget Once
+  //   const layout = l("gardenContent");
+  //   layout.style.display = "flex";
+  //   layout.style.gap = "8px";
+
+  //   //The sidepanel.
+  //   //todo: Should have a min width, and maybe move to be above the plot when the window gets too small. Pop-out maybe?
+  //   //todo:connection with github to ensure ease of refresh etc.
+  //   const panel = l("gardenPanel");
+  //   panel.style.minWidth = "320px";
+  //   panel.style.flex = "0 1 40%";
+
+  //   //field
+  //   field.style.minWidth = 6 * M.tileSize + "px";
+  //   field.style.flex = "1";
+  // },
 });
