@@ -1,3 +1,4 @@
+`<script>
 Game.registerMod("GardenUnchained", {
   init: function () {
     var M = Game.Objects["Farm"].minigame;
@@ -802,3 +803,4 @@ Game.registerMod("GardenUnchained", {
     field.style.flex = "1";
   },
 });
+</script>`
