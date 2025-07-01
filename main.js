@@ -1,8 +1,10 @@
+`<script>
 Game.registerMod("GardenUnchained", {
   init: function () {
     Game.Notify("Garden Unchained loaded!?", "", "", 1);
   },
 });
+</script>`;
 // init: function () {
 //   var M = Game.Objects["Farm"].minigame;
 
