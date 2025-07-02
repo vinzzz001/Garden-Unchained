@@ -3,7 +3,7 @@ var M = Game.Objects["Farm"].minigame;
 
 Game.registerMod("GardenUnchained", {
   init: function () {
-    M.plotSize = {
+    M.plotType = M.plotSize = {
       _width: 7,
       _height: 7,
 
@@ -270,10 +270,14 @@ Game.registerMod("GardenUnchained", {
       M.plotSize.update();
 
       if (!l("gardenPlot")) return false;
+      l("gardenPlot").innerHTML = "";
+
       // if (!l("gardenTile-0-0")) {
       var str = "";
       for (var y = 0; y < M.plotSize.height; y++) {
+        if (!M.plot[y]) M.plot[y] = []; // create missing rows
         for (var x = 0; x < M.plotSize.width; x++) {
+          if (!M.plot[y][x]) M.plot[y][x] = [0, 0]; // create empty tiles
           str += `
             <div 
               id="gardenTile-${x}-${y}" 
@@ -295,7 +299,7 @@ Game.registerMod("GardenUnchained", {
       for (var y = 0; y < M.plotSize.height; y++) {
         for (var x = 0; x < M.plotSize.width; x++) {
           AddEvent(
-            l("gardenTile-" + x + "-" + y),
+            l(`gardenTile-${x}-${y}`),
             "click",
             (function (x, y) {
               return function () {
@@ -304,15 +308,26 @@ Game.registerMod("GardenUnchained", {
             })(x, y)
           );
         }
-        // }
       }
+
+      //     AddEvent(
+      //       l("gardenTile-" + x + "-" + y),
+      //       "click",
+      //       (function (x, y) {
+      //         return function () {
+      //           M.clickTile(x, y);
+      //         };
+      //       })(x, y)
+      //     );
+      //   }
+      // }}
 
       var plants = 0;
       for (var y = 0; y < M.plotSize.height; y++) {
         for (var x = 0; x < M.plotSize.width; x++) {
           var tile = M.plot[y][x];
-          var tileL = l("gardenTile-" + x + "-" + y);
-          var iconL = l("gardenTileIcon-" + x + "-" + y);
+          var tileL = l(`gardenTile-${x}-${y}`);
+          var iconL = l(`gardenTileIcon-${x}-${y}`);
           var me = 0;
 
           if (tile[0] > 0) {
@@ -330,7 +345,7 @@ Game.registerMod("GardenUnchained", {
             iconL.style.backgroundPosition =
               -icon[0] * 48 + "px " + -icon[1] * 48 + "px";
             iconL.style.display = "block";
-            //iconL.innerHTML=M.plotBoost[y][x];
+            // iconL.innerHTML = M.plotBoost[y][x];
           } else iconL.style.display = "none";
 
           if (M.isTileUnlocked(x, y)) tileL.style.display = "block";
@@ -339,15 +354,18 @@ Game.registerMod("GardenUnchained", {
       }
       if (plants >= 6 * 6) Game.Win("In the garden of Eden (baby)");
 
-      Game.Notify("Plots Built?", "", "", 1);
+      Game.Notify("Plots Built", "", "", 1);
     };
 
     M.getTile = function (y, x) {
+      let width = M.plotSize.width;
+      let height = M.plotSize.height;
+
       if (
         x < 0 ||
-        x > M.plotSize.width - 1 ||
+        x > width - 1 ||
         y < 0 ||
-        y > M.plotSize.height - 1 ||
+        y > height - 1 ||
         !M.isTileUnlocked(x, y)
       )
         return [0, 0];
@@ -355,7 +373,7 @@ Game.registerMod("GardenUnchained", {
     };
 
     M.isTileUnlocked = function (x, y) {
-      return x >= 0 && x < M.plotSize.width && y >= 0 && y < M.plotSize.height;
+      return x >= 0 && x < width && y >= 0 && y < height;
     };
 
     M.harvestAll = function (type, mature, mortal) {
@@ -438,13 +456,6 @@ Game.registerMod("GardenUnchained", {
       // this.reStyleDivs();
     };
 
-    M.save = function () {
-      //Disables the normal save for now.
-    };
-    M.load = function (str) {
-      //Disables the normal load for now.
-    };
-
     M.reset = function (hard) {
       M.soil = 0;
       if (M.seedSelected > -1)
@@ -501,7 +512,7 @@ Game.registerMod("GardenUnchained", {
         M.nextStep = Math.min(M.nextStep, now + M.stepT * 1000);
         if (now >= M.nextStep) {
           M.computeStepT();
-          M.nextStep = now + M.stepT * 1000;
+          M.nextStep = now + M.stepT * 5;
 
           M.computeBoostPlot();
           M.computeMatures();
@@ -673,6 +684,8 @@ Game.registerMod("GardenUnchained", {
 
     M.toRebuild = true;
     M.buildPlot();
+    M.buildPanel();
+
     M.load();
     // M.computeBoostPlot();
 
