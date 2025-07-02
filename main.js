@@ -1,7 +1,8 @@
+if (GardenUnchained === undefined) var GardenUnchained = {};
+var M = Game.Objects["Farm"].minigame;
+
 Game.registerMod("GardenUnchained", {
   init: function () {
-    var M = Game.Objects["Farm"].minigame;
-
     M.plotSize = {
       _width: 7,
       _height: 7,
@@ -434,100 +435,14 @@ Game.registerMod("GardenUnchained", {
         Math.max(Math.min(width * 0.6, width - panelW), 6 * M.tileSize) - 8;
       l("gardenField").style.width = fieldW + "px";
       l("gardenPanel").style.width = panelW + "px";
-      this.reStyleDivs();
+      // this.reStyleDivs();
     };
 
     M.save = function () {
-      M.plotSize.update();
-
-      //output cannot use ",", ";" or "|"
-      var str =
-        "" +
-        parseFloat(M.nextStep) +
-        ":" +
-        parseInt(M.soil) +
-        ":" +
-        parseFloat(M.nextSoil) +
-        ":" +
-        parseInt(M.freeze) +
-        ":" +
-        parseInt(M.harvests) +
-        ":" +
-        parseInt(M.harvestsTotal) +
-        ":" +
-        parseInt(M.parent.onMinigame ? "1" : "0") +
-        ":" +
-        parseFloat(M.convertTimes) +
-        ":" +
-        parseFloat(M.nextFreeze) +
-        ":" +
-        " ";
-      for (var i in M.plants) {
-        str += "" + (M.plants[i].unlocked ? "1" : "0");
-      }
-      str += " ";
-      for (var y = 0; y < M.plotSize.height; y++) {
-        for (var x = 0; x < M.plotSize.width; x++) {
-          str +=
-            parseInt(M.plot[y][x][0]) + ":" + parseInt(M.plot[y][x][1]) + ":";
-        }
-      }
-      return str;
+      //Disables the normal save for now.
     };
-
     M.load = function (str) {
-      M.plotSize.update();
-
-      //interpret str; called after .init
-      //note: not actually called in the Game's load; see "minigameSave" in main.js
-      if (!str) return false;
-      var i = 0;
-      var spl = str.split(" ");
-      var spl2 = spl[i++].split(":");
-      var i2 = 0;
-      M.nextStep = parseFloat(spl2[i2++] || M.nextStep);
-      M.soil = parseInt(spl2[i2++] || M.soil);
-      M.nextSoil = parseFloat(spl2[i2++] || M.nextSoil);
-      M.freeze = parseInt(spl2[i2++] || M.freeze) ? 1 : 0;
-      M.harvests = parseInt(spl2[i2++] || 0);
-      M.harvestsTotal = parseInt(spl2[i2++] || 0);
-      var on = parseInt(spl2[i2++] || 0);
-      if (on && Game.ascensionMode != 1) M.parent.switchMinigame(1);
-      M.convertTimes = parseFloat(spl2[i2++] || M.convertTimes);
-      M.nextFreeze = parseFloat(spl2[i2++] || M.nextFreeze);
-      var seeds = spl[i++] || "";
-      if (seeds) {
-        var n = 0;
-        for (var ii in M.plants) {
-          if (seeds.charAt(n) == "1") M.plants[ii].unlocked = 1;
-          else M.plants[ii].unlocked = 0;
-          n++;
-        }
-      }
-      M.plants["bakerWheat"].unlocked = 1;
-
-      var plot = spl[i++] || 0;
-      if (plot) {
-        plot = plot.split(":");
-        var n = 0;
-        for (var y = 0; y < M.plotSize.height; y++) {
-          for (var x = 0; x < M.plotSize.width; x++) {
-            M.plot[y][x] = [parseInt(plot[n]), parseInt(plot[n + 1])];
-            n += 2;
-          }
-        }
-      }
-
-      M.getUnlockedN();
-      M.computeStepT();
-
-      M.buildPlot();
-      M.buildPanel();
-
-      M.computeBoostPlot();
-      M.toCompute = true;
-
-      Game.Notify("Loaded?", "", "", 1);
+      //Disables the normal load for now.
     };
 
     M.reset = function (hard) {
@@ -757,9 +672,8 @@ Game.registerMod("GardenUnchained", {
     this.reStyleDivs();
 
     M.toRebuild = true;
-
-    const gardenSave = JSON.stringify(M.saveData);
-    M.load(gardenSave);
+    M.buildPlot();
+    M.load();
     // M.computeBoostPlot();
 
     console.log("Garden Unchained loaded!");
@@ -805,5 +719,97 @@ Game.registerMod("GardenUnchained", {
     //field
     field.style.minWidth = 6 * M.tileSize + "px";
     field.style.flex = "1";
+  },
+
+  save: function () {
+    var str =
+      "" +
+      parseFloat(M.nextStep) +
+      ":" +
+      parseInt(M.soil) +
+      ":" +
+      parseFloat(M.nextSoil) +
+      ":" +
+      parseInt(M.freeze) +
+      ":" +
+      parseInt(M.harvests) +
+      ":" +
+      parseInt(M.harvestsTotal) +
+      ":" +
+      parseInt(M.parent.onMinigame ? "1" : "0") +
+      ":" +
+      parseFloat(M.convertTimes) +
+      ":" +
+      parseFloat(M.nextFreeze) +
+      ":" +
+      " ";
+    for (var i in M.plants) {
+      str += "" + (M.plants[i].unlocked ? "1" : "0");
+    }
+    str += " ";
+    for (var y = 0; y < M.plotSize.height; y++) {
+      for (var x = 0; x < M.plotSize.width; x++) {
+        str +=
+          parseInt(M.plot[y][x][0]) + ":" + parseInt(M.plot[y][x][1]) + ":";
+      }
+    }
+
+    return str;
+    //output cannot use ",", ";" or "|"  },
+  },
+
+  load: function (str) {
+    M.plotSize.update();
+
+    //interpret str; called after .init
+    //note: not actually called in the Game's load; see "minigameSave" in main.js
+    if (!str) return false;
+    var i = 0;
+    var spl = str.split(" ");
+    var spl2 = spl[i++].split(":");
+    var i2 = 0;
+    M.nextStep = parseFloat(spl2[i2++] || M.nextStep);
+    M.soil = parseInt(spl2[i2++] || M.soil);
+    M.nextSoil = parseFloat(spl2[i2++] || M.nextSoil);
+    M.freeze = parseInt(spl2[i2++] || M.freeze) ? 1 : 0;
+    M.harvests = parseInt(spl2[i2++] || 0);
+    M.harvestsTotal = parseInt(spl2[i2++] || 0);
+    var on = parseInt(spl2[i2++] || 0);
+    if (on && Game.ascensionMode != 1) M.parent.switchMinigame(1);
+    M.convertTimes = parseFloat(spl2[i2++] || M.convertTimes);
+    M.nextFreeze = parseFloat(spl2[i2++] || M.nextFreeze);
+    var seeds = spl[i++] || "";
+    if (seeds) {
+      var n = 0;
+      for (var ii in M.plants) {
+        if (seeds.charAt(n) == "1") M.plants[ii].unlocked = 1;
+        else M.plants[ii].unlocked = 0;
+        n++;
+      }
+    }
+    M.plants["bakerWheat"].unlocked = 1;
+
+    var plot = spl[i++] || 0;
+    if (plot) {
+      plot = plot.split(":");
+      var n = 0;
+      for (var y = 0; y < M.plotSize.height; y++) {
+        for (var x = 0; x < M.plotSize.width; x++) {
+          M.plot[y][x] = [parseInt(plot[n]), parseInt(plot[n + 1])];
+          n += 2;
+        }
+      }
+    }
+
+    M.getUnlockedN();
+    M.computeStepT();
+
+    M.buildPlot();
+    M.buildPanel();
+
+    M.computeBoostPlot();
+    M.toCompute = true;
+
+    Game.Notify("Load?", "", "", 1);
   },
 });
