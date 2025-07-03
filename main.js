@@ -1,10 +1,12 @@
 if (GardenUnchained === undefined) var GardenUnchained = {};
 var M = Game.Objects["Farm"].minigame;
 
+//Todo: Configuration menu.
+//Todo: Reorganise garden layout when panel becomes too small? Add a pop-out garden?
+//! Errors through plotType mismatch (save and current).
 Game.registerMod("GardenUnchained", {
   init: function () {
-    GardenUnchained.config = {};
-    GardenUnchained.config.plotType = 1;
+    if (!GardenUnchained.settings) GardenUnchained.settings = { plotType: 1 };
 
     M.plotSize = {
       _width: 6,
@@ -24,15 +26,14 @@ Game.registerMod("GardenUnchained", {
         var w = Math.floor(lvl / 2 + 1.5);
         var h = Math.ceil(lvl / 2 + 1.5);
 
-        //Long -> Gain horizontal rows every level instead.
-        if (GardenUnchained.config.plotType <= 1 && lvl > 9) {
+        //Long -> Gain horizontal rows every level
+        if (GardenUnchained.settings.plotType <= 1 && lvl > 9) {
           w = lvl - 3;
           h = 6;
         }
 
         //Normal -> Max 6x6
-        if (GardenUnchained.config.plotType <= 0 && lvl > 9) w = 6;
-
+        if (GardenUnchained.settings.plotType <= 0 && lvl > 9) w = 6;
         this._width = w;
         this._height = h;
       },
@@ -296,7 +297,7 @@ Game.registerMod("GardenUnchained", {
       for (var y = 0; y < M.plotSize.height; y++) {
         if (!M.plot[y]) M.plot[y] = []; // create missing rows
         for (var x = 0; x < M.plotSize.width; x++) {
-          if (!M.plot[y][x]) M.plot[y][x] = [y, x]; // create empty tiles
+          if (!M.plot[y][x]) M.plot[y][x] = [0, 0]; // create empty tiles
           str += `
             <div 
               id="gardenTile-${x}-${y}" 
@@ -470,8 +471,14 @@ Game.registerMod("GardenUnchained", {
         Math.max(Math.min(width * 0.6, width - panelW), 6 * M.tileSize) - 8;
       l("gardenField").style.width = fieldW + "px";
       l("gardenPanel").style.width = panelW + "px";
-      // this.reStyleDivs();
     };
+
+    //Adds an way to recenter the GardenUI
+    window.removeEventListener("resize");
+    window.addEventListener("resize", () => {
+      M.onResize();
+      this.recenterGardenUI();
+    });
 
     M.reset = function (hard) {
       M.soil = 0;
@@ -521,7 +528,6 @@ Game.registerMod("GardenUnchained", {
       );
     };
 
-    //Todo: Mutations broken. Not really.
     M.logic = function () {
       //run each frame
       var now = Date.now();
@@ -719,20 +725,16 @@ Game.registerMod("GardenUnchained", {
     const field = l("gardenField");
     field.style.overflow = "auto";
 
-    const fieldRect = field.getBoundingClientRect();
-
     //Places the soils in the bottom
     const soils = l("gardenSoils");
     soils.style.marginTop = "240px";
     soils.style.position = "fixed";
-    soils.style.left = fieldRect.left + fieldRect.width / 2 + "px";
     soils.style.transform = "translateX(-50%)";
 
     //Places sugar info at the bottom
     const sugarInfo = l("gardenInfo");
     sugarInfo.style.marginTop = "288px";
     sugarInfo.style.position = "fixed";
-    sugarInfo.style.left = fieldRect.left + fieldRect.width / 2 + "px";
     sugarInfo.style.transform = "translateX(-50%)";
 
     //Set and forget Once
@@ -741,8 +743,6 @@ Game.registerMod("GardenUnchained", {
     layout.style.gap = "8px";
 
     //The sidepanel.
-    //todo: Should have a min width, and maybe move to be above the plot when the window gets too small. Pop-out maybe?
-    //todo:connection with github to ensure ease of refresh etc.
     const panel = l("gardenPanel");
     panel.style.minWidth = "320px";
     panel.style.flex = "0 1 40%";
@@ -750,6 +750,19 @@ Game.registerMod("GardenUnchained", {
     //field
     field.style.minWidth = 6 * M.tileSize + "px";
     field.style.flex = "1";
+
+    this.recenterGardenUI();
+  },
+
+  recenterGardenUI: function () {
+    const field = l("gardenField");
+    const soils = l("gardenSoils");
+    const sugarInfo = l("gardenInfo");
+
+    const fieldRect = field.getBoundingClientRect();
+
+    soils.style.left = fieldRect.left + fieldRect.width / 2 + "px";
+    sugarInfo.style.left = fieldRect.left + fieldRect.width / 2 + "px";
   },
 
   save: function () {
@@ -844,13 +857,3 @@ Game.registerMod("GardenUnchained", {
     Game.Notify("Load?", "", "", 1);
   },
 });
-
-// Game.customOptionsMenu.push(function () {
-//   let str = "";
-//   str += '<div class="subsection">';
-//   str += '<div class="title">Your Mod Settings</div>';
-//   str +=
-//     '<label><input type="checkbox" id="your-setting-id"> Enable something</label><br>';
-//   str += "</div>";
-//   return str;
-// });
