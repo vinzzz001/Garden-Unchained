@@ -3,9 +3,12 @@ var M = Game.Objects["Farm"].minigame;
 
 Game.registerMod("GardenUnchained", {
   init: function () {
-    M.plotType = M.plotSize = {
-      _width: 7,
-      _height: 7,
+    GardenUnchained.config = {};
+    GardenUnchained.config.plotType = 1;
+
+    M.plotSize = {
+      _width: 6,
+      _height: 6,
 
       get width() {
         return this._width;
@@ -16,13 +19,29 @@ Game.registerMod("GardenUnchained", {
       },
 
       update() {
-        this._width = Math.floor(M.parent.level / 2 + 1.5);
-        this._height = Math.ceil(M.parent.level / 2 + 1.5);
+        //Giant -> Keeps growing each level
+        const lvl = M.parent.level;
+        var w = Math.floor(lvl / 2 + 1.5);
+        var h = Math.ceil(lvl / 2 + 1.5);
+
+        //Long -> Gain horizontal rows every level instead.
+        if (GardenUnchained.config.plotType <= 1 && lvl > 9) {
+          w = lvl - 3;
+          h = 6;
+        }
+
+        //Normal -> Max 6x6
+        if (GardenUnchained.config.plotType <= 0 && lvl > 9) w = 6;
+
+        this._width = w;
+        this._height = h;
       },
     };
     M.plotSize.update();
 
     M.computeBoostPlot = function () {
+      M.plotSize.update();
+
       for (var y = 0; y < M.plotSize.height; y++) {
         for (var x = 0; x < M.plotSize.width; x++) {
           M.plotBoost[y][x] = [1, 1, 1];
@@ -277,7 +296,7 @@ Game.registerMod("GardenUnchained", {
       for (var y = 0; y < M.plotSize.height; y++) {
         if (!M.plot[y]) M.plot[y] = []; // create missing rows
         for (var x = 0; x < M.plotSize.width; x++) {
-          if (!M.plot[y][x]) M.plot[y][x] = [0, 0]; // create empty tiles
+          if (!M.plot[y][x]) M.plot[y][x] = [y, x]; // create empty tiles
           str += `
             <div 
               id="gardenTile-${x}-${y}" 
@@ -354,26 +373,23 @@ Game.registerMod("GardenUnchained", {
       }
       if (plants >= 6 * 6) Game.Win("In the garden of Eden (baby)");
 
-      Game.Notify("Plots Built", "", "", 1);
+      // Game.Notify("Plots Built", "", "", 1);
     };
 
-    M.getTile = function (y, x) {
-      let width = M.plotSize.width;
-      let height = M.plotSize.height;
+    M.getTile = function (x, y) {
+      const w = M.plotSize.width;
+      const h = M.plotSize.height;
 
-      if (
-        x < 0 ||
-        x > width - 1 ||
-        y < 0 ||
-        y > height - 1 ||
-        !M.isTileUnlocked(x, y)
-      )
+      if (x < 0 || x >= w || y < 0 || y >= h || !M.isTileUnlocked(x, y))
         return [0, 0];
       return M.plot[y][x];
     };
 
     M.isTileUnlocked = function (x, y) {
-      return x >= 0 && x < width && y >= 0 && y < height;
+      const w = M.plotSize.width;
+      const h = M.plotSize.height;
+
+      return x >= 0 && x < w && y >= 0 && y < h;
     };
 
     M.harvestAll = function (type, mature, mortal) {
@@ -409,6 +425,7 @@ Game.registerMod("GardenUnchained", {
         }, 250);
     };
 
+    //Shift click the seeds amount text to fill the garden.
     AddEvent(l("gardenSeedsUnlocked"), "click", function () {
       if (Game.sesame) {
         if (Game.keys[16] && Game.keys[17]) {
@@ -504,6 +521,7 @@ Game.registerMod("GardenUnchained", {
       );
     };
 
+    //Todo: Mutations broken. Not really.
     M.logic = function () {
       //run each frame
       var now = Date.now();
@@ -687,7 +705,7 @@ Game.registerMod("GardenUnchained", {
     M.buildPanel();
 
     M.load();
-    // M.computeBoostPlot();
+    M.computeBoostPlot();
 
     console.log("Garden Unchained loaded!");
   },
@@ -826,3 +844,13 @@ Game.registerMod("GardenUnchained", {
     Game.Notify("Load?", "", "", 1);
   },
 });
+
+// Game.customOptionsMenu.push(function () {
+//   let str = "";
+//   str += '<div class="subsection">';
+//   str += '<div class="title">Your Mod Settings</div>';
+//   str +=
+//     '<label><input type="checkbox" id="your-setting-id"> Enable something</label><br>';
+//   str += "</div>";
+//   return str;
+// });
