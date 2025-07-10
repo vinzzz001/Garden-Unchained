@@ -4,7 +4,10 @@ var M = Game.Objects["Farm"].minigame;
 //Todo: Configuration menu.
 //Todo: Reorganise garden layout when panel becomes too small? Add a pop-out garden?
 //! Errors through plotType mismatch (save and current).
+//$ The x,y and y,x switch-arounds are annoying.
 Game.registerMod("GardenUnchained", {
+  GardenUnchained: this,
+
   init: function () {
     if (!GardenUnchained.settings) GardenUnchained.settings = { plotType: 1 };
 
@@ -23,17 +26,18 @@ Game.registerMod("GardenUnchained", {
       update() {
         //Giant -> Keeps growing each level
         const lvl = M.parent.level;
-        var w = Math.floor(lvl / 2 + 1.5);
-        var h = Math.ceil(lvl / 2 + 1.5);
+        var w = Math.ceil(lvl / 2 + 1.5);
+        var h = Math.floor(lvl / 2 + 1.5);
 
-        //Long -> Gain horizontal rows every level
+        //Long -> Gain horizontal rows every level (after 9)
         if (GardenUnchained.settings.plotType <= 1 && lvl > 9) {
-          w = lvl - 3;
+          w = lvl - 3; // 6x6 at lvl-9, 7x6 at lvl-10, 8x6 at lvl-11, etc.
           h = 6;
         }
 
         //Normal -> Max 6x6
         if (GardenUnchained.settings.plotType <= 0 && lvl > 9) w = 6;
+
         this._width = w;
         this._height = h;
       },
@@ -42,24 +46,21 @@ Game.registerMod("GardenUnchained", {
 
     M.computeBoostPlot = function () {
       M.plotSize.update();
+      const h = M.plotSize.height;
+      const w = M.plotSize.width;
 
-      for (var y = 0; y < M.plotSize.height; y++) {
-        for (var x = 0; x < M.plotSize.width; x++) {
+      if (!M.plotBoost[y]) return;
+      for (var y = 0; y < w; y++) {
+        if (!M.plotBoost[y][x]) return;
+
+        for (var x = 0; x < w; x++) {
           M.plotBoost[y][x] = [1, 1, 1];
         }
       }
 
       var effectOn = function (X, Y, s, mult) {
-        for (
-          var y = Math.max(0, Y - s);
-          y < Math.min(M.plotSize.height, Y + s + 1);
-          y++
-        ) {
-          for (
-            var x = Math.max(0, X - s);
-            x < Math.min(M.plotSize.width, X + s + 1);
-            x++
-          ) {
+        for (var y = Math.max(0, Y - s); y < Math.min(h, Y + s + 1); y++) {
+          for (var x = Math.max(0, X - s); x < Math.min(w, X + s + 1); x++) {
             if (X == x && Y == y) {
             } else {
               for (var i = 0; i < mult.length; i++) {
@@ -70,8 +71,8 @@ Game.registerMod("GardenUnchained", {
         }
       };
 
-      for (var y = 0; y < M.plotSize.height; y++) {
-        for (var x = 0; x < M.plotSize.width; x++) {
+      for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
           var tile = M.plot[y][x];
           if (tile[0] > 0) {
             var me = M.plantsById[tile[0] - 1];
@@ -266,9 +267,9 @@ Game.registerMod("GardenUnchained", {
     };
 
     M.plot = [];
-    for (var y = 0; y < M.plotSize.height ?? 6; y++) {
+    for (var y = 0; y < M.plotSize.height; y++) {
       M.plot[y] = [];
-      for (var x = 0; x < M.plotSize.width ?? 6; x++) {
+      for (var x = 0; x < M.plotSize.width; x++) {
         M.plot[y][x] = [0, 0];
       }
     }
@@ -288,15 +289,16 @@ Game.registerMod("GardenUnchained", {
     M.buildPlot = function () {
       M.toRebuild = false;
       M.plotSize.update();
+      M.resizePlots();
 
       if (!l("gardenPlot")) return false;
       l("gardenPlot").innerHTML = "";
 
-      // if (!l("gardenTile-0-0")) {
+      //Intentionally generating 1 additional row/column which remains disabled. For smooth garden leveling purposes.
       var str = "";
-      for (var y = 0; y < M.plotSize.height; y++) {
+      for (var y = 0; y <= M.plotSize.height; y++) {
         if (!M.plot[y]) M.plot[y] = []; // create missing rows
-        for (var x = 0; x < M.plotSize.width; x++) {
+        for (var x = 0; x <= M.plotSize.width; x++) {
           if (!M.plot[y][x]) M.plot[y][x] = [0, 0]; // create empty tiles
           str += `
             <div 
@@ -382,7 +384,7 @@ Game.registerMod("GardenUnchained", {
       const h = M.plotSize.height;
 
       if (x < 0 || x >= w || y < 0 || y >= h || !M.isTileUnlocked(x, y))
-        return [0, 0];
+        return [0, 0, 0];
       return M.plot[y][x];
     };
 
@@ -473,11 +475,39 @@ Game.registerMod("GardenUnchained", {
       l("gardenPanel").style.width = panelW + "px";
     };
 
+    M.resizePlots = function () {
+      const w = M.plotSize.width;
+      const h = M.plotSize.height;
+
+      // Expand plot
+      for (let y = 0; y < h; y++) {
+        if (!M.plot[y]) M.plot[y] = [];
+        for (let x = 0; x < w; x++) {
+          if (!M.plot[y][x]) M.plot[y][x] = [0, 0];
+        }
+      }
+
+      // Trim extra rows/cols if downsizing
+      M.plot.length = h;
+      for (let y = 0; y < h; y++) M.plot[y].length = w;
+
+      // Expand plotBoost
+      for (let y = 0; y < h; y++) {
+        if (!M.plotBoost[y]) M.plotBoost[y] = [];
+        for (let x = 0; x < w; x++) {
+          if (!M.plotBoost[y][x]) M.plotBoost[y][x] = [1, 1, 1];
+        }
+      }
+
+      M.plotBoost.length = h;
+      for (let y = 0; y < h; y++) M.plotBoost[y].length = w;
+    };
+
     //Adds an way to recenter the GardenUI
-    window.removeEventListener("resize");
+    window.removeEventListener("resize", onresize);
     window.addEventListener("resize", () => {
+      this.centerGardenUI();
       M.onResize();
-      this.recenterGardenUI();
     });
 
     M.reset = function (hard) {
@@ -521,6 +551,7 @@ Game.registerMod("GardenUnchained", {
       setTimeout(
         (function (M) {
           return function () {
+            this.centerGardenUI();
             M.onResize();
           };
         })(M),
@@ -709,11 +740,16 @@ Game.registerMod("GardenUnchained", {
     M.toRebuild = true;
     M.buildPlot();
     M.buildPanel();
-
-    M.load();
     M.computeBoostPlot();
 
-    console.log("Garden Unchained loaded!");
+    M.save = function () {
+      GardenUnchained.save;
+    };
+    M.load = function () {
+      GardenUnchained.load;
+    };
+
+    console.log("Garden Unchained init done!");
   },
 
   reStyleDivs: function () {
@@ -751,10 +787,10 @@ Game.registerMod("GardenUnchained", {
     field.style.minWidth = 6 * M.tileSize + "px";
     field.style.flex = "1";
 
-    this.recenterGardenUI();
+    this.centerGardenUI();
   },
 
-  recenterGardenUI: function () {
+  centerGardenUI: function () {
     const field = l("gardenField");
     const soils = l("gardenSoils");
     const sugarInfo = l("gardenInfo");
@@ -766,6 +802,10 @@ Game.registerMod("GardenUnchained", {
   },
 
   save: function () {
+    M.plotSize.update();
+    const w = M.plotSize.width;
+    const h = M.plotSize.height;
+
     var str =
       "" +
       parseFloat(M.nextStep) +
@@ -786,13 +826,21 @@ Game.registerMod("GardenUnchained", {
       ":" +
       parseFloat(M.nextFreeze) +
       ":" +
-      " ";
+      parseFloat(M.plantsById.length) +
+      ": "; // Added number of plants
+
+    //Unlocked seeds
     for (var i in M.plants) {
       str += "" + (M.plants[i].unlocked ? "1" : "0");
     }
     str += " ";
-    for (var y = 0; y < M.plotSize.height; y++) {
-      for (var x = 0; x < M.plotSize.width; x++) {
+
+    //Variable plot size
+    str += parseFloat(w) + ":" + parseFloat(h) + " ";
+
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        if (!M.plot[y][x][0]) M.plot[y][x] = [0, 0];
         str +=
           parseInt(M.plot[y][x][0]) + ":" + parseInt(M.plot[y][x][1]) + ":";
       }
@@ -805,6 +853,7 @@ Game.registerMod("GardenUnchained", {
   load: function (str) {
     M.plotSize.update();
 
+    console.log(str);
     //interpret str; called after .init
     //note: not actually called in the Game's load; see "minigameSave" in main.js
     if (!str) return false;
@@ -822,10 +871,11 @@ Game.registerMod("GardenUnchained", {
     if (on && Game.ascensionMode != 1) M.parent.switchMinigame(1);
     M.convertTimes = parseFloat(spl2[i2++] || M.convertTimes);
     M.nextFreeze = parseFloat(spl2[i2++] || M.nextFreeze);
+    var plantsN = parseFloat(spl2[i2++] || M.plants.length);
     var seeds = spl[i++] || "";
     if (seeds) {
       var n = 0;
-      for (var ii in M.plants) {
+      for (var ii in plantsN) {
         if (seeds.charAt(n) == "1") M.plants[ii].unlocked = 1;
         else M.plants[ii].unlocked = 0;
         n++;
@@ -833,12 +883,16 @@ Game.registerMod("GardenUnchained", {
     }
     M.plants["bakerWheat"].unlocked = 1;
 
+    var w = parseFloat(spl[i++] || M.plotSize.width);
+    var h = parseFloat(spl2[i2++] || M.plotSize.height);
+
     var plot = spl[i++] || 0;
     if (plot) {
       plot = plot.split(":");
       var n = 0;
-      for (var y = 0; y < M.plotSize.height; y++) {
-        for (var x = 0; x < M.plotSize.width; x++) {
+      for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+          if (M.plot[y] == undefined) console.log(h, y, "width:", w, x);
           M.plot[y][x] = [parseInt(plot[n]), parseInt(plot[n + 1])];
           n += 2;
         }
