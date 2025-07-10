@@ -872,10 +872,15 @@ Game.registerMod("GardenUnchained", {
     M.convertTimes = parseFloat(spl2[i2++] || M.convertTimes);
     M.nextFreeze = parseFloat(spl2[i2++] || M.nextFreeze);
     var plantsN = parseFloat(spl2[i2++] || M.plants.length);
+
+    if (!M.plantsById.length == plantsN)
+      return "Error! saved/loaded plants mismatch.";
+
     var seeds = spl[i++] || "";
     if (seeds) {
       var n = 0;
-      for (var ii in plantsN) {
+      console.log(M.plants);
+      for (ii in M.plants) {
         if (seeds.charAt(n) == "1") M.plants[ii].unlocked = 1;
         else M.plants[ii].unlocked = 0;
         n++;
